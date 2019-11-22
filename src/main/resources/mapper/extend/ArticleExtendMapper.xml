@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.briup.apps.cms.dao.extend.ArticleExtendMapper">
+
+    <resultMap id="CategoryResult" type="com.briup.apps.cms.bean.Category"
+               extends="com.briup.apps.cms.dao.CategoryMapper.BaseResultMap">
+        <result property="id" column="cat_id"></result>
+        <result column="cat_name" property="name"></result>
+        <result column="cat_parentId" property="parentId"></result>
+    </resultMap>
+    <resultMap id="UserResult" type="com.briup.apps.cms.bean.User"
+               extends="com.briup.apps.cms.dao.UserMapper.BaseResultMap">
+        <result column="USERID" property="id"></result>
+        <result column="USER_STATUS" property="status"></result>
+    </resultMap>
+
+    <resultMap id="CommentResult" type="com.briup.apps.cms.bean.Comment" extends="com.briup.apps.cms.dao.CommentMapper.BaseResultMap">
+        <result property="id" column="COMMENT_ID"></result>
+        <result property="content" column="COMMENT_CONTENT"></result>
+        <result property="status" column="COMMENT_STATUS"></result>
+    </resultMap>
+
+    <resultMap id="ArticleExtendResult" type="com.briup.apps.cms.bean.extend.ArticleExtend"
+               extends="com.briup.apps.cms.dao.ArticleMapper.BaseResultMap">
+        <association property="category" resultMap="CategoryResult"></association>
+        <association property="user" resultMap="UserResult"></association>
+        <collection property="comments" resultMap="CommentResult"></collection>
+    </resultMap>
+
+    <select id="findArticleByAuthorId" parameterType="Long" resultMap="ArticleExtendResult">
+        SELECT CMS_USER.ID AS USERID,username,password,telephone,realname,
+        gender,birth,register_time,cms_user.status AS user_status,
+        user_face,cms_article.id,title,content,source,publish_time,
+        read_times,cms_article.status,thumb_up,thumb_down,author_id
+        FROM CMS_ARTICLE,CMS_USER
+        WHERE CMS_ARTICLE.AUTHOR_ID=CMS_USER.ID
+        AND author_id=#{id}
+    </select>
+
+    <select id="findArticleByCategoryId" parameterType="Long" resultType="com.briup.apps.cms.bean.extend.ArticleExtend">
+      SELECT cms_article.id,title,content,source,publish_time,
+      read_times,cms_article.status,thumb_up,thumb_down,category_id,
+      cms_category.id AS cat_id,name,description,no,parent_id cat_parentId
+      FROM CMS_ARTICLE,CMS_CATEGORY
+      WHERE CMS_ARTICLE.CATEGORY_ID=CMS_CATEGORY.ID
+      AND CATEGORY_ID=#{id}
+    </select>
+
+    <select id="findCommentsByArticleId" resultMap="ArticleExtendResult">
+        SELECT a.id,title,a.content,a.source,a.publish_time,
+        a.read_times,a.status,a.thumb_up,a.thumb_down,a.author_id,a.category_id,
+        c.id COMMENT_ID,c.content COMMENT_CONTENT,c.comment_time,c.status COMMENT_STATUS,
+        c.user_id,c.article_id,c.parent_id cat_parentId
+        <if test="_parameter==null ">
+            FROM CMS_ARTICLE a Left JOIN CMS_COMMENT c
+            ON a.ID=c.ARTICLE_ID
+        </if>
+        <if test="_parameter!=null">
+            FROM CMS_ARTICLE a,CMS_COMMENT c
+            WHERE a.ID=c.ARTICLE_ID
+            AND a.ID=#{id}
+        </if>
+    </select>
+    <select id="findAll" resultMap="ArticleExtendResult">
+        SELECT a.id,a.title,a.content,a.source,a.publish_time,
+        a.read_times,a.status,a.thumb_up,a.thumb_down,a.author_id,a.category_id,
+        c.id cat_id,c.NAME cat_name,c.DESCRIPTION,c.NO,c.PARENT_ID cat_parentId,
+        u.ID USERID,u.username,u.password,u.telephone,u.realname,u.gender,u.birth,
+        u.register_time,u.status USER_STATUS, u.user_face
+        FROM CMS_ARTICLE a,CMS_CATEGORY c,CMS_USER u
+        WHERE a.CATEGORY_ID=c.ID <!--AND a.AUTHOR_ID=u.ID-->
+    </select>
+</mapper>

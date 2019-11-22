@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.briup.apps.cms.dao.extend.CategoryExtendMapper">
+    <resultMap id="categoryExtendResult" type="com.briup.apps.cms.bean.extend.CategoryExtend">
+        <result property="id" column="CID"></result>
+        <result property="name" column="CNAME"></result>
+        <result property="description" column="CDESCRIPTION"></result>
+        <result property="no" column="CNO"></result>
+        <result property="parentId" column="PARENT_ID"></result>
+        <collection property="categorys" resultMap="com.briup.apps.cms.dao.CategoryMapper.BaseResultMap"></collection>
+    </resultMap>
+
+    <select id="findAll" resultType="com.briup.apps.cms.bean.extend.CategoryExtend" resultMap="categoryExtendResult">
+       SELECT c1.ID AS CID,c1.NAME AS CNAME,c1.DESCRIPTION AS CDESCRIPTION,c1.NO AS CNO,c1.PARENT_ID AS CPARENTID,
+        c2.ID,c2.NAME,c2.DESCRIPTION,c2.NO,c2.PARENT_ID
+        FROM CMS_CATEGORY c1 LEFT JOIN CMS_CATEGORY c2
+        ON c1.ID=c2.PARENT_ID
+    </select>
+</mapper>

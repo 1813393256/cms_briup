@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.briup.apps.cms.dao.extend.BaseRoleExtendMapper">
+
+    <resultMap id="RoleAndPrivilegesResult" type="com.briup.apps.cms.bean.extend.BaseRoleExtend">
+        <result property="id" column="rid"></result>
+        <result property="name" column="rname"></result>
+        <collection property="privileges" resultMap="com.briup.apps.cms.dao.PrivilegeMapper.BaseResultMap"></collection>
+    </resultMap>
+
+
+    <resultMap
+            id="BaseRoleExtendResultMap"
+            type="com.briup.apps.cms.bean.extend.BaseRoleExtend"
+            extends="com.briup.apps.cms.dao.RoleMapper.BaseResultMap"
+    >
+        <collection property="privileges" column="id"
+                    select="com.briup.apps.cms.dao.extend.BasePrivilegeExtendMapper.selectByRoleId"></collection>
+    </resultMap>
+
+    <select id="selectAllRoleWithPrivilege" resultMap="RoleAndPrivilegesResult">
+        SELECT rrp.id rid,rrp.name rname,p.*
+        FROM cms_privilege p
+        RIGHT JOIN(
+            SELECT r.id,r.name,rp.privilege_id
+		    FROM cms_role r
+		    LEFT JOIN cms_role_privilege rp
+	    	ON r.id=rp.role_id)rrp
+        ON rrp.privilege_id=p.id
+    </select>
+
+    <select id="selectByUserId" resultType="com.briup.apps.cms.bean.Role">
+        SELECT r.*
+        FROM cms_role r, cms_user_role ur
+        WHERE r.id = ur.role_id
+        AND ur.user_id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <select id="selectAll" resultMap="BaseRoleExtendResultMap">
+        SELECT  *
+        FROM cms_role
+    </select>
+    <delete id="deletePrivilegeByRoleId" parameterType="Long">
+        DELETE
+        FROM cms_privilege
+        WHERE cms_privilege.id=(
+                SELECT privilege_id
+                FROM cms_role_privilege rp
+                WHERE rp.role_id=#{id})
+    </delete>
+</mapper>
